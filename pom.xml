@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.greenhouse</groupId>
     <artifactId>GH_Backend</artifactId>
-    <version>1.0-${timestamp}</version> <!-- or ${buildNumber} -->
+    <version>1.0.4</version>
     <name>GH_Backend</name>
     <description>GH_Backend</description>
     <url/>
@@ -28,8 +28,7 @@
     </scm>
     <properties>
         <java.version>17</java.version>
-        <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
-        <timestamp>${maven.build.timestamp}</timestamp>
+    
     </properties>
     <dependencies>
         <dependency>
