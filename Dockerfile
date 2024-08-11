@@ -23,7 +23,7 @@ FROM openjdk:17
 WORKDIR /app
 
 # Copy the JAR file from the previous stage
-COPY --from=build /app/target/GH_Backend-1.0.3.jar GH_Backend-1.0.3.jar
+COPY --from=build /app/target/GH_Backend-*.jar app.jar
 
 # Set the entry point to run the JAR file
-ENTRYPOINT ["java", "-jar", "/app/GH_Backend-1.0.3.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

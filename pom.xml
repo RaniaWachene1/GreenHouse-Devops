@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.greenhouse</groupId>
     <artifactId>GH_Backend</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.0</version>
     <name>GH_Backend</name>
     <description>GH_Backend</description>
     <url/>
@@ -28,7 +28,11 @@
     </scm>
     <properties>
         <java.version>17</java.version>
-    
+        <buildNumber>1</buildNumber> <!-- Increment manually -->
+        <version.major>1</version.major>
+        <version.minor>0</version.minor>
+        <version.patch>0</version.patch>
+        <project.version>${version.major}.${version.minor}.${version.patch}.${buildNumber}</project.version>
     </properties>
     <dependencies>
         <dependency>
@@ -103,6 +107,22 @@
                         </exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.7</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>set</goal>
+                        </goals>
+                        <configuration>
+                            <newVersion>1.0.${buildNumber}</newVersion>
+                            <generateBackupPoms>false</generateBackupPoms>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
