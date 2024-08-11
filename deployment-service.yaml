@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment # Kubernetes resource kind we are creating
 metadata:
-  name: santa-deployment
+  name: GreenHouse-deployment
 spec:
   selector:
     matchLabels:
-      app: santa
+      app: GreenHouse
   replicas: 2 # Number of replicas that will be created for this deployment
   template:
     metadata:
       labels:
-        app: santa
+        app: GreenHouse
     spec:
       containers:
-        - name: santa
-          image: adijaiswal/santa:latest # Image that will be used to containers in the cluster
-          imagePullPolicy: IfNotPresent
+        - name: GreenHouse
+          image: raniawachene/GreenHouse:latest # Image that will be used to containers in the cluster
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080 # The port that the container is running on in the cluster
 
@@ -25,10 +25,10 @@ spec:
 apiVersion: v1 # Kubernetes API version
 kind: Service # Kubernetes resource kind we are creating
 metadata: # Metadata of the resource kind we are creating
-  name: santa-ssvc
+  name: GreenHouse-ssvc
 spec:
   selector:
-    app: santa
+    app: GreenHouse
   ports:
     - protocol: "TCP"
       port: 8080 # The port that the service is running on in the cluster
