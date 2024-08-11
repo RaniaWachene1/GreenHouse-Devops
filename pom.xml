@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.greenhouse</groupId>
     <artifactId>GH_Backend</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <name>GH_Backend</name>
     <description>GH_Backend</description>
     <url/>
