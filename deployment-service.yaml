@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment # Kubernetes resource kind we are creating
 metadata:
-  name: GreenHouse-deployment
+  name: greenhouse-deployment
 spec:
   selector:
     matchLabels:
-      app: GreenHouse
+      app: greenhouse
   replicas: 2 # Number of replicas that will be created for this deployment
   template:
     metadata:
       labels:
-        app: GreenHouse
+        app: greenhouse
     spec:
       containers:
         - name: GreenHouse
@@ -25,10 +25,10 @@ spec:
 apiVersion: v1 # Kubernetes API version
 kind: Service # Kubernetes resource kind we are creating
 metadata: # Metadata of the resource kind we are creating
-  name: GreenHouse-ssvc
+  name: greenhouse-ssvc
 spec:
   selector:
-    app: GreenHouse
+    app: greenhouse
   ports:
     - protocol: "TCP"
       port: 8080 # The port that the service is running on in the cluster
