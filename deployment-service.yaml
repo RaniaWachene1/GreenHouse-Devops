@@ -60,7 +60,9 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
+      storage: 10Gi  # Must match the PV's storage capacity
+  storageClassName: manual  # Must match the PV's storage class
+
 
 ---
 
