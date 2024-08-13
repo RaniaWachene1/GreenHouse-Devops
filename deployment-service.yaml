@@ -2,20 +2,18 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: mysql-pvo
+  name: mysql-pv
   labels:
-    app: mysql
-    tier: database
-  namespace: webapps
+    type: local
 spec:
+  storageClassName: manual
   capacity:
     storage: 10Gi
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: manual
   hostPath:
     path: /mnt/data/mysql
+
 
 ---
 
@@ -23,18 +21,16 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mysql-pvc-claims
-  labels:
-    app: mysql
-    tier: database
+  name: mysql-pvc
   namespace: webapps
 spec:
+  storageClassName: manual
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
-  storageClassName: manual
+
 
 ---
 
@@ -44,6 +40,8 @@ kind: Deployment
 metadata:
   name: mysql-deployment
   namespace: webapps
+  labels:
+    app: mysql
 spec:
   replicas: 1
   selector:
@@ -56,27 +54,26 @@ spec:
     spec:
       containers:
         - name: mysql
-          image: mysql:latest
-          args:
-            - "--ignore-db-dir=lost+found"
-          ports:
-            - containerPort: 3306
-              name: mysql
+          image: mysql:9.0.1
           env:
             - name: MYSQL_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: MYSQL_ROOT_PASSWORD
+              value: root  # Replace with your desired root password
             - name: MYSQL_DATABASE
               value: greenhouse
+            - name: MYSQL_USER
+              value: greenhouse_user
+            - name: MYSQL_PASSWORD
+              value: root  # Replace with your desired password
+          ports:
+            - containerPort: 3306
           volumeMounts:
-            - mountPath: /var/lib/mysql
-              name: mysql-persistent-storage
+            - name: mysql-storage
+              mountPath: /var/lib/mysql
       volumes:
-        - name: mysql-persistent-storage
+        - name: mysql-storage
           persistentVolumeClaim:
-            claimName: mysql-pvc-claims
+            claimName: mysql-pvc
+
 
 ---
 
@@ -87,37 +84,14 @@ metadata:
   name: mysql-service
   namespace: webapps
 spec:
+  selector:
+    app: mysql
   ports:
     - protocol: TCP
       port: 3306
       targetPort: 3306
-  selector:
-    app: mysql
-    tier: database
 
----
 
-# Secret for MySQL and SMTP Credentials
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mysql-secret
-  namespace: webapps
-type: Opaque
-data:
-  MYSQL_ROOT_PASSWORD: cm9vdA== # Base64 encoded value of "root"
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: smtp-secret
-  namespace: webapps
-type: Opaque
-data:
-  smtp-username: cmFuaWF3YWNoZW4yMUBnbWFpbC5jb20= # Base64 encoded value of "raniawachen21@gmail.com"
-  smtp-password: Y2tzcWxseHB5dGVhaW9qcA==           # Base64 encoded value of your SMTP password
 
 ---
 
@@ -127,8 +101,10 @@ kind: Deployment
 metadata:
   name: greenhouse-deployment
   namespace: webapps
+  labels:
+    app: greenhouse
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: greenhouse
@@ -140,36 +116,16 @@ spec:
       containers:
         - name: greenhouse
           image: raniawachene/greenhouse:latest
-          imagePullPolicy: Always
           ports:
-            - containerPort: 8087
+            - containerPort: 8080
           env:
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:mysql://mysql-service:3306/greenhouse?useUnicode=true&useJDBCCompliantTimezoneShift=true&createDatabaseIfNotExist=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
+              value: "jdbc:mysql://mysql-service:3306/greenhouse"
             - name: SPRING_DATASOURCE_USERNAME
-              value: "root"
+              value: "greenhouse_user"
             - name: SPRING_DATASOURCE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: MYSQL_ROOT_PASSWORD
-            - name: SPRING_MAIL_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: smtp-secret
-                  key: smtp-username
-            - name: SPRING_MAIL_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: smtp-secret
-                  key: smtp-password
-          resources:
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
-            requests:
-              memory: "256Mi"
-              cpu: "250m"
+              value: "root"
+
 
 ---
 
@@ -184,6 +140,7 @@ spec:
     app: greenhouse
   ports:
     - protocol: TCP
-      port: 8087
-      targetPort: 8087
+      port: 8080
+      targetPort: 8080
   type: LoadBalancer
+
