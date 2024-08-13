@@ -92,9 +92,9 @@ spec:
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:mysql://mysql-service:3306/greenhouse?useUnicode=true&useJDBCCompliantTimezoneShift=true&createDatabaseIfNotExist=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
             - name: SPRING_DATASOURCE_USERNAME
-              value: "root"
+              value: "greenhouse"
             - name: SPRING_DATASOURCE_PASSWORD
-              value: "root"
+              value: "greenhouse"
           resources:
             limits:
               memory: "512Mi"
