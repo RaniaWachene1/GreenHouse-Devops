@@ -111,7 +111,7 @@ spec:
             - containerPort: 8080
           env:
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:mysql://10.99.106.217:3306/greenhouse"
+              value: "jdbc:mysql://10.99.106.217:3306/greenhouse?useUnicode=true&useJDBCCompliantTimezoneShift=true&createDatabaseIfNotExist=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false"
             - name: SPRING_DATASOURCE_USERNAME
               value: "greenhouse_user"
             - name: SPRING_DATASOURCE_PASSWORD
