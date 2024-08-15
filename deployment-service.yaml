@@ -13,10 +13,7 @@ spec:
     - ReadWriteOnce
   hostPath:
     path: /mnt/data/mysql
-
-
 ---
-
 # PersistentVolumeClaim for MySQL
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -31,9 +28,7 @@ spec:
     requests:
       storage: 10Gi
 
-
 ---
-
 # MySQL Deployment
 apiVersion: apps/v1
 kind: Deployment
@@ -64,10 +59,14 @@ spec:
               value: greenhouse_user
             - name: MYSQL_PASSWORD
               value: root  # Replace with your desired password
-
-
+          volumeMounts:
+            - name: mysql-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-storage
+          persistentVolumeClaim:
+            claimName: mysql-pvc
 ---
-
 # MySQL Service
 apiVersion: v1
 kind: Service
@@ -83,9 +82,7 @@ spec:
       targetPort: 3306
 
 
-
 ---
-
 # Backend Deployment
 apiVersion: apps/v1
 kind: Deployment
@@ -116,10 +113,7 @@ spec:
               value: "greenhouse_user"
             - name: SPRING_DATASOURCE_PASSWORD
               value: "root"
-
-
 ---
-
 # Backend Service
 apiVersion: v1
 kind: Service
@@ -136,4 +130,3 @@ spec:
       port: 8080
       targetPort: 8080
   type: LoadBalancer
-
