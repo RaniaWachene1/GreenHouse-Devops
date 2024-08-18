@@ -89,7 +89,7 @@ public class WebSecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("*", "https://b94d-197-27-101-27.ngrok-free.app")
+                        .allowedOrigins("http://localhost:4200", "http://10.0.0.10:4200")  // Replace <your-ip-address> with your actual IP
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true)
