@@ -50,7 +50,7 @@ spec:
     spec:
       containers:
         - name: mysql
-          image: mysql:5.7
+          image: mysql:8.0.1
           env:
             - name: MYSQL_ROOT_PASSWORD
               value: root  # Replace with your desired root password
@@ -86,7 +86,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: greenhouse-deployment
+  name: greenhouse-backend-deployment
   namespace: webapps
   labels:
     app: greenhouse
@@ -109,7 +109,7 @@ spec:
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:mysql://mysql-service:3306/greenhouse?useUnicode=true&useJDBCCompliantTimezoneShift=true&createDatabaseIfNotExist=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false"
             - name: SPRING_DATASOURCE_USERNAME
-              value: "greenhouse_user"
+              value: "root"
             - name: SPRING_DATASOURCE_PASSWORD
               value: "root"
 ---
