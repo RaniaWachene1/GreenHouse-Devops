@@ -82,7 +82,7 @@ spec:
       port: 3306
       targetPort: 3306
 ---
-# Backend Deployment
+# Backend Deployment with Depends On
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -100,6 +100,11 @@ spec:
       labels:
         app: greenhouse
     spec:
+      # Init container to wait for MySQL to be ready
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox
+          command: ['sh', '-c', 'until nslookup mysql-service; do echo waiting for mysql; sleep 2; done;']
       containers:
         - name: greenhouse
           image: raniawachene/greenhouse:latest
