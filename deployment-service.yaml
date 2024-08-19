@@ -28,7 +28,6 @@ spec:
   resources:
     requests:
       storage: 1Gi
-
 ---
 # MySQL Deployment
 apiVersion: apps/v1
@@ -53,13 +52,13 @@ spec:
           image: mysql:8.0.34
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: root  # Replace with your desired root password
+              value: root
             - name: MYSQL_DATABASE
               value: greenhouse
             - name: MYSQL_USER
               value: greenhouse_user
             - name: MYSQL_PASSWORD
-              value: root  # Replace with your desired password
+              value: root
           volumeMounts:
             - name: mysql-storage
               mountPath: /var/lib/mysql
