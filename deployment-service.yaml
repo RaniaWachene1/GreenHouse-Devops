@@ -57,11 +57,12 @@ spec:
               value: root  # Replace with your desired password
           volumeMounts:
             - name: db-storage
-              mountPath: /var/lib/mysql  # Corrected to the default MySQL data directory
+              mountPath: /var/lib/mysql  # Mounts the PVC at this directory inside the container
       volumes:
         - name: db-storage
           persistentVolumeClaim:
-            claimName: db-pvc
+            claimName: db-pvc  # References the PVC defined earlier
+
 ---
 # MySQL Service
 apiVersion: v1
