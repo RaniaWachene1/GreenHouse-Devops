@@ -25,9 +25,8 @@ spec:
   resources:
     requests:
       storage: 1Gi
-
 ---
-# MySQL Deployment
+# MySQL Deployment with Init Container
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -43,26 +42,32 @@ spec:
       labels:
         app: db
     spec:
+      initContainers:
+        - name: init-mysql
+          image: mysql:5.7
+          command: ['sh', '-c', 'test -d /var/lib/mysql/mysql || mysqld --initialize-insecure --user=mysql --datadir=/var/lib/mysql']
+          volumeMounts:
+            - name: db-storage
+              mountPath: /var/lib/mysql
       containers:
         - name: db
           image: mysql:5.7
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: root  # Replace with your desired root password
+              value: root
             - name: MYSQL_DATABASE
               value: greenhouse
             - name: MYSQL_USER
               value: greenhouse_user
             - name: MYSQL_PASSWORD
-              value: root  # Replace with your desired password
+              value: root
           volumeMounts:
             - name: db-storage
-              mountPath: /var/lib/mysql  # Mounts the PVC at this directory inside the container
+              mountPath: /var/lib/mysql
       volumes:
         - name: db-storage
           persistentVolumeClaim:
-            claimName: db-pvc  # References the PVC defined earlier
-
+            claimName: db-pvc
 ---
 # MySQL Service
 apiVersion: v1
@@ -78,7 +83,7 @@ spec:
       port: 3306
       targetPort: 3306
 ---
-# Backend Deployment with Depends On
+# Backend Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -103,7 +108,7 @@ spec:
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:mysql://db-service:3306/greenhouse?useUnicode=true&useJDBCCompliantTimezoneShift=true&createDatabaseIfNotExist=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false"
             - name: SPRING_DATASOURCE_USERNAME
-              value: "greenhouse_user"  # Corrected to match MySQL user
+              value: "greenhouse_user"
             - name: SPRING_DATASOURCE_PASSWORD
               value: "root"
       restartPolicy: Always
