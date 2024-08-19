@@ -3,53 +3,47 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: mysql-pv
-  labels:
-    type: local
+  name: db-pv
 spec:
-  storageClassName: manual
-  capacity:
-    storage: 10Gi
   accessModes:
     - ReadWriteOnce
+  capacity:
+    storage: 1Gi
   hostPath:
-    path: /mnt/data/mysql
+    path: /mnt/data
 ---
 # PersistentVolumeClaim for MySQL
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mysql-pvc
+  name: db-pvc
   namespace: webapps
 spec:
-  storageClassName: manual
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
+      storage: 1Gi
 
 ---
 # MySQL Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql-deployment
+  name: db-deployment
   namespace: webapps
-  labels:
-    app: mysql
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mysql
+      app: db
   template:
     metadata:
       labels:
-        app: mysql
+        app: db
     spec:
       containers:
-        - name: mysql
+        - name: db
           image: mysql:5.7
           env:
             - name: MYSQL_ROOT_PASSWORD
@@ -61,22 +55,22 @@ spec:
             - name: MYSQL_PASSWORD
               value: root  # Replace with your desired password
           volumeMounts:
-            - name: mysql-storage
-              mountPath: /var/lib/mysql
+            - name: db-storage
+              mountPath: /var/lib/mysql  # Corrected to the default MySQL data directory
       volumes:
-        - name: mysql-storage
+        - name: db-storage
           persistentVolumeClaim:
-            claimName: mysql-pvc
+            claimName: db-pvc
 ---
 # MySQL Service
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-service
+  name: db-service
   namespace: webapps
 spec:
   selector:
-    app: mysql
+    app: db
   ports:
     - protocol: TCP
       port: 3306
@@ -86,49 +80,43 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: greenhouse-backend-deployment
+  name: backend-deployment
   namespace: webapps
-  labels:
-    app: greenhouse
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: greenhouse
+      app: web
   template:
     metadata:
       labels:
-        app: greenhouse
+        app: web
     spec:
-      # Init container to wait for MySQL to be ready
-      initContainers:
-        - name: wait-for-mysql
-          image: busybox
-          command: ['sh', '-c', 'until nslookup mysql-service; do echo waiting for mysql; sleep 2; done;']
       containers:
-        - name: greenhouse
+        - name: web
           image: raniawachene/greenhouse:latest
           ports:
             - containerPort: 8080
           env:
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:mysql://mysql-service:3306/greenhouse?useUnicode=true&useJDBCCompliantTimezoneShift=true&createDatabaseIfNotExist=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false"
+              value: "jdbc:mysql://db-service:3306/greenhouse?useUnicode=true&useJDBCCompliantTimezoneShift=true&createDatabaseIfNotExist=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false"
             - name: SPRING_DATASOURCE_USERNAME
-              value: "root"
+              value: "greenhouse_user"  # Corrected to match MySQL user
             - name: SPRING_DATASOURCE_PASSWORD
               value: "root"
+      restartPolicy: Always
 ---
 # Backend Service
 apiVersion: v1
 kind: Service
 metadata:
-  name: greenhouse-service
+  name: web-service
   namespace: webapps
   annotations:
     service.beta.kubernetes.io/azure-load-balancer-internal: "true"
 spec:
   selector:
-    app: greenhouse
+    app: web
   ports:
     - protocol: TCP
       port: 8080
