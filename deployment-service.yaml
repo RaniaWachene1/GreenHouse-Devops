@@ -30,8 +30,22 @@ spec:
       storage: 1Gi
 ---
 # MySQL Deployment
-
-
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+  namespace: webapps
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
     spec:
       containers:
         - name: mysql
