@@ -30,22 +30,8 @@ spec:
       storage: 1Gi
 ---
 # MySQL Deployment
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mysql-deployment
-  namespace: webapps
-  labels:
-    app: mysql
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mysql
-  template:
-    metadata:
-      labels:
-        app: mysql
+
+
     spec:
       containers:
         - name: mysql
@@ -62,16 +48,10 @@ spec:
           volumeMounts:
             - name: mysql-storage
               mountPath: /var/lib/mysql
-            - name: mysql-config-volume
-              mountPath: /etc/mysql/conf.d/
-              subPath: my.cnf
       volumes:
         - name: mysql-storage
           persistentVolumeClaim:
             claimName: mysql-pvc
-        - name: mysql-config-volume
-          configMap:
-            name: mysql-config
 ---
 # MySQL Service
 apiVersion: v1
