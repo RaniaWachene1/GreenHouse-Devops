@@ -130,3 +130,55 @@ spec:
       port: 8080
       targetPort: 8080
   type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greenhouse-frontend-deployment
+  namespace: webapps
+  labels:
+    app: greenhouse-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: greenhouse-frontend
+  template:
+    metadata:
+      labels:
+        app: greenhouse-frontend
+    spec:
+      containers:
+        - name: greenhouse-frontend
+          image: raniawachene/greenhouse-frontend:latest
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: greenhouse-frontend-service
+  namespace: webapps
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+spec:
+  selector:
+    app: greenhouse-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+
