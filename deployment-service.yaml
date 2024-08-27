@@ -1,28 +1,17 @@
----
-# PersistentVolume for MySQL
 apiVersion: v1
-kind: PersistentVolume
+kind: Namespace
 metadata:
-  name: mysql-pv
-  labels:
-    type: local
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: /mnt/data/mysql
+  name: webapps
 ---
 # PersistentVolumeClaim for MySQL
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mysql-pvc
+  name: mysql-pv-claim
   namespace: webapps
+  labels:
+    app: Appdb
 spec:
-  storageClassName: manual
   accessModes:
     - ReadWriteOnce
   resources:
@@ -33,39 +22,37 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql-deployment
+  name: deploymentdb
   namespace: webapps
   labels:
-    app: mysql
+    app: Appdb
 spec:
-  replicas: 1
   selector:
     matchLabels:
-      app: mysql
+      app: Appdb
+  replicas: 1
   template:
     metadata:
       labels:
-        app: mysql
+        app: Appdb
     spec:
       containers:
-        - name: mysql
-          image: mysql:8.0.34
+        - name: appsql
+          image: mysql:latest
+          ports:
+            - containerPort: 3306
           env:
             - name: MYSQL_ROOT_PASSWORD
               value: root
             - name: MYSQL_DATABASE
               value: greenhouse
-            - name: MYSQL_USER
-              value: greenhouse_user
-            - name: MYSQL_PASSWORD
-              value: root
           volumeMounts:
-            - name: mysql-storage
+            - name: mysql-persistent-storage
               mountPath: /var/lib/mysql
       volumes:
-        - name: mysql-storage
+        - name: mysql-persistent-storage
           persistentVolumeClaim:
-            claimName: mysql-pvc
+            claimName: mysql-pv-claim
 ---
 # MySQL Service
 apiVersion: v1
@@ -75,44 +62,60 @@ metadata:
   namespace: webapps
 spec:
   selector:
-    app: mysql
+    app: Appdb
   ports:
     - protocol: TCP
       port: 3306
       targetPort: 3306
   type: ClusterIP
-
+---
+# Frontend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploymentfront
+  namespace: webapps
+  labels:
+    app: Appfront
+spec:
+  selector:
+    matchLabels:
+      app: Appfront
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: Appfront
+    spec:
+      containers:
+        - name: appangular
+          image: raniawachene/greenhouse-frontend:latest
+          ports:
+            - containerPort: 80
 ---
 # Backend Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: greenhouse-backend-deployment
+  name: deploymentback
   namespace: webapps
   labels:
-    app: greenhouse
+    app: Appback
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: greenhouse
+      app: Appback
   template:
     metadata:
       labels:
-        app: greenhouse
+        app: Appback
     spec:
       containers:
-        - name: greenhouse
+        - name: appspring
           image: raniawachene/greenhouse:latest
           ports:
             - containerPort: 8080
-          env:
-            - name: SPRING_DATASOURCE_URL
-              value: "jdbc:mysql://mysql-service:3306/greenhouse?useUnicode=true&useJDBCCompliantTimezoneShift=true&createDatabaseIfNotExist=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false"
-            - name: SPRING_DATASOURCE_USERNAME
-              value: "greenhouse_user"
-            - name: SPRING_DATASOURCE_PASSWORD
-              value: "root"
 ---
 # Backend Service
 apiVersion: v1
@@ -122,49 +125,13 @@ metadata:
   namespace: webapps
 spec:
   selector:
-    app: greenhouse
+    app: Appback
   ports:
     - protocol: TCP
       port: 8080
       targetPort: 8080
-      nodePort: 30080  # Choose a NodePort between 30000-32767
-  type: NodePort
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: greenhouse-frontend-deployment
-  namespace: webapps
-  labels:
-    app: greenhouse-frontend
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: greenhouse-frontend
-  template:
-    metadata:
-      labels:
-        app: greenhouse-frontend
-    spec:
-      containers:
-        - name: greenhouse-frontend
-          image: raniawachene/greenhouse-frontend:latest
-          ports:
-            - containerPort: 80
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 15
-            periodSeconds: 20
----
+# Frontend Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -172,11 +139,42 @@ metadata:
   namespace: webapps
 spec:
   selector:
-    app: greenhouse-frontend
+    app: Appfront
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
-      nodePort: 30081  # Choose a NodePort between 30000-32767
-  type: NodePort
-
+---
+# IngressClass Definition
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: ingressc
+spec:
+  controller: k8s.io/ingress-nginx
+---
+# Ingress Definition
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-ingress
+  namespace: webapps
+spec:
+  ingressClassName: ingressc
+  rules:
+    - http:
+        paths:
+          - path: /backend
+            pathType: Prefix
+            backend:
+              service:
+                name: greenhouse-service
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: greenhouse-frontend-service
+                port:
+                  number: 80
