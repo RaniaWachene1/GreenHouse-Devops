@@ -26,11 +26,24 @@ pipeline {
                 sh "mvn compile"
             }
         }
-        stage('Test') {
-            steps {
-                sh "mvn test"
-            }
-        }
+       stage('Tests - JUnit/Mockito') {
+               steps {
+                   sh 'mvn test'
+               }
+           }
+
+           stage('JaCoCo Code Coverage') {
+                       steps {
+                           sh 'mvn jacoco:prepare-agent test jacoco:report',
+                             jacoco execPattern: '**/target/jacoco.exec',
+                                                     classPattern: '**/classes',
+                                                     sourcePattern: '**/src/main/java',
+                                                     inclusionPattern: '**/*.class'
+                                          }
+                       }
+                   }
+
+      
         stage('File System Scan') {
             steps {
                 sh "trivy fs --format table -o trivy-fs-report.html ."
