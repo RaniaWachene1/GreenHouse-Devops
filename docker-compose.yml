@@ -12,8 +12,8 @@ services:
     volumes:
       - db:/var/lib/mysql
 
-  app-stationski:
-    image: raniawachene/greenhouseback:latest
+  app-greenhouse:
+    image: 192.168.80.142:5000/greenhouseback:latest
     depends_on:
       - mysqldb
     restart: on-failure
@@ -32,9 +32,9 @@ services:
     tty: true
 
   frontend:
-    image: raniawachene/greenhousefront:latest
+    image: 192.168.80.142:5000/greenhousefront:latest
     depends_on:
-      - app-stationski
+      - app-greenhouse
     restart: on-failure
     ports:
       - "4200:80"
